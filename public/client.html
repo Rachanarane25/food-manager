@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Client Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<button class="toggle" onclick="toggleTheme()">🌙</button>
+
+<div class="container">
+  <h2>Order Food</h2>
+
+  <select id="category" onchange="loadMenu()">
+    <option value="">Select Category</option>
+  </select>
+
+  <div id="menu"></div>
+
+<label style="display:block;margin-top:15px">Quantity</label>
+<input id="qty" type="number" min="1" value="1">
+
+<button onclick="placeOrder()" id="payBtn" disabled>Pay</button>
+
+  <h3 id="total"></h3>
+
+  <a href="/auth/logout"><button>Logout</button></a>
+</div>
+
+<script>
+let foods = [];
+let selectedFoodId = null;
+
+// Load all foods once
+async function fetchFoods() {
+  const res = await fetch("/food/view");
+  foods = await res.json();
+
+  // get unique categories
+  const cats = [...new Set(foods.map(f => f.category).filter(Boolean))];
+  cats.forEach(c => {
+    category.innerHTML += `<option value="${c}">${c}</option>`;
+  });
+}
+
+function loadMenu() {
+  const cat = category.value;
+  menu.innerHTML = "";
+  selectedFoodId = null;
+  total.innerText = "";
+  document.getElementById("payBtn").disabled = true;
+
+  if (!cat) {
+    menu.innerHTML =
+      "<p style='color:var(--muted)'>Please select a category</p>";
+    return;
+  }
+
+  foods
+    .filter(f => f.category === cat)
+    .forEach(f => {
+      if (!f.name) return;
+      menu.innerHTML += `
+        <label class="food-option">
+          <input type="radio" name="food" value="${f._id}"
+                 onclick="selectFood('${f._id}')">
+          ${f.name} - ₹${f.price}
+        </label>
+      `;
+    });
+}
+
+
+function selectFood(id) {
+  selectedFoodId = id;
+document.getElementById("payBtn").disabled = false;
+
+  document.querySelectorAll(".food-option").forEach(el => {
+    el.classList.remove("selected");
+  });
+
+  document.querySelector(`input[value="${id}"]`).parentElement.classList.add("selected");
+}
+
+async function placeOrder() {
+  if (!selectedFoodId) {
+    alert("Please select a food item");
+    return;
+  }
+
+  const res = await fetch("/order/place", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      foodId: selectedFoodId,
+      quantity: qty.value
+    })
+  });
+
+  const data = await res.json();
+  total.innerText = "You have to pay ₹" + data.totalPrice;
+}
+
+fetchFoods();
+</script>
+<script>
+function toggleTheme() {
+  document.body.classList.toggle("dark");
+  localStorage.setItem("theme",
+    document.body.classList.contains("dark") ? "dark" : "light"
+  );
+}
+
+if (localStorage.getItem("theme") === "dark") {
+  document.body.classList.add("dark");
+}
+</script>
+
+</body>
+</html>

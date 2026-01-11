@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<button class="toggle" onclick="toggleTheme()">🌙</button>
+
+<div class="container">
+  <h2>Admin Dashboard</h2>
+
+  <h3>Add / Update Food</h3>
+  <input id="fid" placeholder="Food ID (auto)" readonly>
+  <input id="fname" placeholder="Food Name">
+  <input id="fprice" type="number" placeholder="Price">
+  <input id="fcat" placeholder="Category">
+  <button onclick="saveFood()">Save Food</button>
+
+  <h3>Food List</h3>
+  <div id="foodList"></div>
+
+  <a href="/auth/logout"><button>Logout</button></a>
+</div>
+
+<script>
+async function loadFoods() {
+  const res = await fetch("/food/view");
+  const foods = await res.json();
+
+  foodList.innerHTML = "";
+  foods.forEach(f => {
+    foodList.innerHTML += `
+      <div class="card food-item">
+        ${f.name} - ₹${f.price} (${f.category})
+        <div>
+          <button onclick="editFood('${f._id}','${f.name}',${f.price},'${f.category}')">Edit</button>
+          <button onclick="deleteFood('${f._id}')">Delete</button>
+        </div>
+      </div>`;
+  });
+}
+
+function editFood(id, name, price, category) {
+  fid.value = id;
+  fname.value = name;
+  fprice.value = price;
+  fcat.value = category;
+}
+
+async function saveFood() {
+  if (!fname.value || !fprice.value || !fcat.value) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  if (fid.value) {
+    await fetch("/food/update", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        id: fid.value,
+        name: fname.value,
+        price: fprice.value,
+        category: fcat.value
+      })
+    });
+    alert("Food updated");
+  } else {
+    await fetch("/food/add", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        name: fname.value,
+        price: fprice.value,
+        category: fcat.value,
+        available: true
+      })
+    });
+    alert("Food added");
+  }
+
+  fid.value = "";
+  fname.value = "";
+  fprice.value = "";
+  fcat.value = "";
+
+  loadFoods();   // 🔄 RELOAD FROM DB
+}
+
+async function deleteFood(id) {
+  await fetch("/food/delete", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ id })
+  });
+  loadFoods();
+}
+
+loadFoods();
+</script>
+
+<script>
+function toggleTheme() {
+  document.body.classList.toggle("dark");
+  localStorage.setItem("theme",
+    document.body.classList.contains("dark") ? "dark" : "light"
+  );
+}
+
+if (localStorage.getItem("theme") === "dark") {
+  document.body.classList.add("dark");
+}
+</script>
+
+</body>
+</html>

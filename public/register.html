@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<button class="toggle" onclick="toggleTheme()">🌙</button>
+
+<div class="container">
+  <h2>Create Client Account</h2>
+
+  <form action="/auth/register" method="POST">
+    <input name="name" placeholder="Name" required>
+    <input name="email" type="email" placeholder="Email" required>
+    <input name="password" type="password" placeholder="Password" required>
+    <button>Create Account</button>
+  </form>
+
+  <p style="text-align:center">
+    <a href="login.html">Back to Login</a>
+  </p>
+</div>
+<script>
+function toggleTheme() {
+  document.body.classList.toggle("dark");
+  localStorage.setItem("theme",
+    document.body.classList.contains("dark") ? "dark" : "light"
+  );
+}
+
+if (localStorage.getItem("theme") === "dark") {
+  document.body.classList.add("dark");
+}
+</script>
+
+</body>
+</html>
