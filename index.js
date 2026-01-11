@@ -32,7 +32,8 @@ app.use(
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Atlas Connected"))
-  .catch(err => console.log("❌ MongoDB Error:", err));
+  .catch(err => console.error("❌ MongoDB Error:", err));
+;
 
 app.use("/auth", require("./routes/authRoutes"));
 app.use("/food", require("./routes/foodRoutes"));
